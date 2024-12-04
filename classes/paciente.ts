@@ -6,31 +6,10 @@ export default class Paciente {
   private data_nasc: Date;
   private idade: number;
 
-  private constructor(cpf: string, nome: string, data_nasc: Date) {
+  constructor(cpf: string, nome: string, data_nasc: Date) {
     this.setCpf(cpf);
     this.setNome(nome);
     this.setData_nasc(data_nasc);
-  }
-
-  static criarPaciente(
-    cpf: string,
-    nome: string,
-    data_nasc: Date,
-  ): Paciente | null {
-    if (!Paciente.isValidCPF(cpf)) {
-      console.log("Paciente não possui um CPF válido, tente novamente.");
-      return null;
-    }
-    if (nome.trim().length === 0) {
-      console.log("Nome não pode ser vázio");
-      return null;
-    }
-
-    if (isNaN(data_nasc.getTime())) {
-      console.log("Data de nascimento inválida");
-      return null;
-    }
-    return new Paciente(cpf, nome, data_nasc);
   }
 
   getCpf() {
