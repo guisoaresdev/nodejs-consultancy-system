@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "start": "npx tsx index.ts"
+  },
+  "dependencies": {
+    "prompt-sync": "^4.2.0",
+    "typescript": "^5.6.3"
+  },
+  "devDependencies": {
+    "@types/prompt-sync": "^4.2.3"
+  }
+}
