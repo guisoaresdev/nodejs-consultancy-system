@@ -1,11 +1,28 @@
-import Application from "./setup/application.ts";
+import db from "./database/database";
+import ConsultorioView from "./views/consultorio.view";
+import PromptSync from "prompt-sync";
 
-// TODO: Refatoração pós avaliação:
-// 1. Encapsular os funcionalidades do consultório (Classe Consultório)
-// 2. Separar a UI, do dominio, do controle
-// 3. Criar funcionalidade de setup pra realizar a injeção das dependencias e afins
-// 4. Consultório deve ser um singleton instanciando os objetos de armazenamento de dados
+(async () => {
+  console.log("Inicializando o sistema...");
 
-const app = new Application();
-const view = app.getConsultorioView();
-view.menuPrincipal();
+  // Inicializa o banco de dados
+  const dbInitialized = await db.init();
+  if (!dbInitialized) {
+    console.error(
+      "Erro ao inicializar o banco de dados. Encerrando a aplicação.",
+    );
+    process.exit(1);
+  }
+
+  // Configurações da interface do usuário
+  const prompt = PromptSync();
+  const consultorioView = new ConsultorioView(prompt);
+
+  // Exibe o menu principal
+  try {
+    await consultorioView.menuPrincipal();
+  } catch (error) {
+    console.error("Erro inesperado durante a execução:", error);
+    process.exit(1);
+  }
+})();

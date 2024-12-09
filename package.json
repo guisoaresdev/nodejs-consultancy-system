@@ -3,7 +3,10 @@
     "start": "npx tsx index.ts"
   },
   "dependencies": {
+    "pg": "^8.13.1",
+    "pg-hstore": "^2.3.4",
     "prompt-sync": "^4.2.0",
+    "sequelize": "^6.37.5",
     "typescript": "^5.6.3"
   },
   "devDependencies": {
