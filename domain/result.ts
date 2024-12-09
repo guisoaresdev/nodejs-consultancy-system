@@ -34,15 +34,22 @@ class Result<T> {
   /**
    * Retorna o valor em caso de sucesso
    */
-  get value(): T | null {
+  get value(): T {
+    if (this.#value === null) {
+      throw new Error(
+        "Não é possível acessar o valor de um resultado com falha.",
+      );
+    }
     return this.#value;
   }
 
-  /**
-   * Retorna a lista de erros em caso de fracasso
-   */
-  get errors(): string[] | null {
-    return this.#errors;
+  get errors(): string[] {
+    if (this.#errors === null) {
+      throw new Error(
+        "Não é possível acessar erros de um resultado com sucesso.",
+      );
+    }
+    return this.#errors || [];
   }
 
   /**

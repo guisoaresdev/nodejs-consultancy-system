@@ -22,9 +22,6 @@ const createModelPaciente = (
       nome: {
         type: dataTypes.STRING,
         allowNull: false,
-        validate: {
-          len: [Paciente.NOME_TAMANHO_MINIMO, 255], // Validar tamanho
-        },
       },
       data_nasc: {
         type: dataTypes.DATEONLY,

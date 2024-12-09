@@ -1,91 +1,67 @@
-import PacienteRepository from "../repositories/paciente.repository";
-import ConsultaRepository from "../repositories/consulta.repository";
+import ConsultorioService from "../services/consultorio.service";
 
 export default class ConsultorioController {
+
   // Função para cadastrar um paciente
-  async cadastrarPaciente(
-    cpf: string,
-    nome: string,
-    dataNasc: Date,
-  ): Promise<boolean> {
+  async cadastrarPaciente(cpf: string, nome: string, dataNasc: Date): Promise<string> {
     try {
-      const paciente = await PacienteRepository.salva({
-        cpf,
-        nome,
-        data_nasc: dataNasc,
-      });
-      return paciente;
+      const resultado = await ConsultorioService.cadastrarPaciente(cpf, nome, dataNasc);
+      if (resultado) {
+        return "Paciente cadastrado com sucesso!";
+      } else {
+        return "Erro ao cadastrar paciente.";
+      }
     } catch (error) {
       throw new Error("Erro ao cadastrar paciente: " + error.message);
     }
   }
 
-  // Função para listar os pacientes
-  async listarPacientes() {
+  async listarPacientes(): Promise<any[]> {
     try {
-      const pacientes = await PacienteRepository.buscaTodos();
+      const pacientes = await ConsultorioService.buscarPacientes();
       return pacientes;
     } catch (error) {
       throw new Error("Erro ao listar pacientes: " + error.message);
     }
   }
 
-  // Função para agendar uma consulta
-  async agendarConsulta(
-    pacienteId: number,
-    dataConsulta: Date,
-    horaInicial: string,
-    horaFinal: string,
-  ) {
+  async agendarConsulta(pacienteId: number, dataConsulta: Date, horaInicial: string, horaFinal: string): Promise<string> {
     try {
-      const consulta = await ConsultaRepository.salva({
-        paciente_id: pacienteId,
-        data_consulta: dataConsulta,
-        hora_inicial: horaInicial,
-        hora_final: horaFinal,
-      });
-      return "Consulta agendada com sucesso!";
+      const resultado = await ConsultorioService.agendarConsulta(pacienteId, dataConsulta, horaInicial, horaFinal);
+      return resultado;
     } catch (error) {
       throw new Error("Erro ao agendar consulta: " + error.message);
     }
   }
 
-  // Função para cancelar uma consulta
-  async cancelarConsulta(cpf: string, dataConsulta: Date, horaInicial: string) {
+  async cancelarConsulta(cpf: string, dataConsulta: Date, horaInicial: string): Promise<string> {
     try {
-      const consultas = await ConsultaRepository.buscaPorPacienteCPF(cpf);
-
-      const agendamento = consultas.find(
-        (consulta) =>
-          consulta.data_consulta === dataConsulta &&
-          consulta.hora_inicial === horaInicial,
-      );
-
-      if (agendamento) {
-        await ConsultaRepository.remove(agendamento);
-        return "Consulta cancelada com sucesso!";
-      } else {
-        return "Nenhum agendamento encontrado para este CPF e data.";
-      }
+      const resultado = await ConsultorioService.cancelarConsulta(cpf, dataConsulta, horaInicial);
+      return resultado;
     } catch (error) {
       throw new Error("Erro ao cancelar consulta: " + error.message);
     }
   }
 
-  // Outras funções auxiliares para validações, como CPF, data, horário, etc.
+  async buscaPacientePorCPF(cpf: string): Promise<boolean> {
+    try {
+      const pacienteExiste = await ConsultorioService.buscaPacientePorCPF(cpf);
+      return pacienteExiste;
+    } catch (error) {
+      console.log("Erro ao buscar por CPF: ", error.message);
+      return false;
+    }
+  }
+
   isCpfValido(cpf: string) {
-    // Validação do CPF
   }
 
   validaData(data: Date) {
-    // Validação de data
   }
 
   validaFormatoData(dataStr: string) {
-    // Validação do formato de data
   }
 
   validarHorario(hora: string) {
-    // Validação do formato de hora
   }
 }

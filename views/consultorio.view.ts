@@ -329,9 +329,10 @@ export default class ConsultorioView {
         if (!this.isCpfValido(cpf)) {
           console.log("CPF não é válido");
           cpf = this.getInput("Informe um CPF válido: ");
-          continue;
+          return;
         }
 
+        const pacienteExistente = await this.consultorioController.buscaPacientePorCPF(cpf);
         if (pacienteExistente) {
           console.log("CPF já cadastrado");
           cpf = this.getInput("Informe um CPF válido: ");
@@ -343,9 +344,9 @@ export default class ConsultorioView {
 
       let nome = this.getInput("Informe o nome: ");
       while (!nomeValido) {
-        if (!this.nomeTemTamanhoMinimo(nome, Paciente.NOME_TAMANHO_MINIMO)) {
+        if (!this.nomeTemTamanhoMinimo(nome, 5)) {
           console.log(
-            `Nome deve ter no mínimo ${Paciente.NOME_TAMANHO_MINIMO} caracteres `,
+            `Nome deve ter no mínimo 5 caracteres `,
           );
           nome = this.getInput("Informe o nome: ");
           continue;
@@ -397,11 +398,7 @@ export default class ConsultorioView {
         dataValida = true;
       }
 
-      const paciente = await this.consultorioController.cadastrarPaciente(
-        cpf,
-        nome,
-        dataNasc,
-      );
+      const paciente = await this.consultorioController.cadastrarPaciente(cpf, nome, dataNasc);
       if (paciente) {
         console.log("Paciente criado com sucesso!");
         return paciente;

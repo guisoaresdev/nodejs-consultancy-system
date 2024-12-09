@@ -20,20 +20,25 @@ class Paciente extends Model {
    * @param {string} cpf
    * @param {string} nome
    * @param {Date} data_nasc
+   * @param {number} idade
    * @returns Paciente ou uma lista de erros, em caso de erro de validação
    */
-  static of(cpf: string, nome: string, data_nasc: Date) {
+  static of(cpf: string, nome: string, data_nasc: Date, idade: number) {
     const errors = [];
 
-    if (!Paciente.isValidCPF(cpf)) errors.push(ErroPaciente.CPF_INVALIDO);
+    if (!cpf || !Paciente.isValidCPF(cpf))
+      errors.push(ErroPaciente.CPF_INVALIDO);
     if (!nome || nome.length < Paciente.NOME_TAMANHO_MINIMO)
       errors.push(ErroPaciente.NOME_INVALIDO);
     if (!data_nasc || isNaN(new Date(data_nasc).getTime()))
       errors.push(ErroPaciente.DATA_NASC_INVALIDA);
 
-    return errors.length === 0
-      ? Result.success(Paciente.build({ cpf, nome, data_nasc }))
-      : Result.failure(errors);
+    if (errors.length > 0) {
+      console.error("Erros na validação:", errors);
+      return Result.failure(errors);
+    }
+
+    return Result.success(Paciente.build({ cpf, nome, data_nasc, idade }));
   }
 
   /**

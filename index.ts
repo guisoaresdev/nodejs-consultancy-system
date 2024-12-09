@@ -1,6 +1,6 @@
 import ConsultorioController from "./controllers/consultorio.controller";
 import db from "./database/database";
-import ConsultorioView from "./views/consultorio.view";
+import NewConsultorioView from "./views/new.consultorio.view";
 import PromptSync from "prompt-sync";
 
 // TODO:
@@ -25,7 +25,7 @@ import PromptSync from "prompt-sync";
   // Configurações da interface do usuário
   const prompt = PromptSync();
   const consultorioController = new ConsultorioController();
-  const consultorioView = new ConsultorioView(prompt, consultorioController);
+  const consultorioView = new NewConsultorioView(prompt, consultorioController);
 
   // Exibe o menu principal
   try {
