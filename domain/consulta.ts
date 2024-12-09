@@ -1,6 +1,6 @@
 import { Model, DataTypes } from "sequelize";
-import ErroConsulta from "./erro-consulta.js";
-import Result from "./result.js";
+import ErroConsulta from "./erro.consulta";
+import Result from "./result";
 
 /**
  * Classe Consulta

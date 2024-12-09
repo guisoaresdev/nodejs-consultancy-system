@@ -1,11 +1,19 @@
-import { Model, DataTypes } from "sequelize";
-import ErroPaciente from "./erro-paciente.js";
-import Result from "./result.js";
+import { Model, DataTypes, Sequelize } from "sequelize";
+import ErroPaciente from "./erro.paciente";
+import Result from "./result";
 
 /**
  * Classe Paciente adaptada para Sequelize
  */
 class Paciente extends Model {
+  public id!: string;
+  public cpf!: string;
+  public nome!: string;
+  public data_nasc!: Date;
+
+  // Tamanho mínimo do nome do paciente
+  static NOME_TAMANHO_MINIMO = 5;
+
   /**
    * Método fábrica para validação dos dados e criação do Paciente.
    *
@@ -14,7 +22,7 @@ class Paciente extends Model {
    * @param {Date} data_nasc
    * @returns Paciente ou uma lista de erros, em caso de erro de validação
    */
-  static of(cpf, nome, data_nasc) {
+  static of(cpf: string, nome: string, data_nasc: Date) {
     const errors = [];
 
     if (!Paciente.isValidCPF(cpf)) errors.push(ErroPaciente.CPF_INVALIDO);
@@ -48,7 +56,7 @@ class Paciente extends Model {
    * @param {string} cpf CPF do paciente.
    * @returns {boolean} Retorna `true` se o CPF for válido.
    */
-  static isValidCPF(cpf) {
+  static isValidCPF(cpf: string) {
     cpf = cpf.replace(/[^\d]+/g, "");
     if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
 
@@ -72,6 +80,45 @@ class Paciente extends Model {
   }
 
   /**
+   * Inicializa o modelo no Sequelize.
+   * @param sequelize Instância do Sequelize
+   */
+  static initialize(sequelize: Sequelize): void {
+    Paciente.init(
+      {
+        id: {
+          type: DataTypes.UUID,
+          autoIncrement: true,
+          primaryKey: true,
+          defaultValue: DataTypes.UUIDV4,
+        },
+        cpf: {
+          type: DataTypes.STRING(11),
+          allowNull: false,
+          unique: true,
+        },
+        nome: {
+          type: DataTypes.STRING,
+          allowNull: false,
+          validate: {
+            len: [Paciente.NOME_TAMANHO_MINIMO, 255], // Validar tamanho
+          },
+        },
+        data_nasc: {
+          type: DataTypes.DATEONLY,
+          allowNull: false,
+        },
+      },
+      {
+        sequelize,
+        modelName: "Paciente",
+        tableName: "pacientes",
+        indexes: [{ unique: true, fields: ["cpf"] }],
+      },
+    );
+  }
+
+  /**
    * Configura as associações no Sequelize.
    * @param {Sequelize} models
    */
@@ -83,3 +130,5 @@ class Paciente extends Model {
     });
   }
 }
+
+export default Paciente;

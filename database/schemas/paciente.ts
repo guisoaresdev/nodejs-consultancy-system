@@ -1,38 +1,37 @@
-/* TODO: Relacionamentos DB
- * 1. Agenda (1 pra N) Consultas
- * 2. Paciente (1 pra N) Consultas
- * 3. Atributos de Agenda: id
- * 4. Atributos de Consultas: id, id_agenda, id_paciente, data_consulta, hora_inicial, hora_final
- * 5. Atributos de Paciente: id, cpf, nome, data_nasc, idade.
- * */
+import { Sequelize, DataTypes, DataTypes } from "sequelize";
+import Paciente from "../../domain/paciente";
 
-const createModelPaciente = (Paciente, sequelize, DataTypes) => {
-  Paciente.init(
+class PacienteSequelize extends Paciente {}
+
+const createModelPaciente = (
+  sequelize: Sequelize,
+  dataTypes: typeof DataTypes,
+) => {
+  PacienteSequelize.init(
     {
       id: {
-        type: DataTypes.UUID,
-        autoIncrement: true,
+        type: dataTypes.UUID,
         primaryKey: true,
-        defaultValue: DataTypes.UUIDV4,
+        defaultValue: Sequelize.fn("gen_random_uuid"),
       },
       cpf: {
-        type: DataTypes.STRING(11),
+        type: dataTypes.STRING(11),
         allowNull: false,
         unique: true,
       },
       nome: {
-        type: DataTypes.STRING,
+        type: dataTypes.STRING,
         allowNull: false,
         validate: {
           len: [Paciente.NOME_TAMANHO_MINIMO, 255], // Validar tamanho
         },
       },
       data_nasc: {
-        type: DataTypes.DATEONLY,
+        type: dataTypes.DATEONLY,
         allowNull: false,
       },
       idade: {
-        type: DataTypes.INTEGER,
+        type: dataTypes.INTEGER,
         allowNull: false,
       },
     },
@@ -43,6 +42,7 @@ const createModelPaciente = (Paciente, sequelize, DataTypes) => {
       indexes: [{ unique: true, fields: ["cpf"] }],
     },
   );
+  return PacienteSequelize;
 };
 
 export default createModelPaciente;

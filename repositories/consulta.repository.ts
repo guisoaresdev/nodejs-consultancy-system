@@ -1,7 +1,7 @@
 import Consulta from "../domain/consulta";
 import Paciente from "../domain/paciente";
 
-class RepositorioConsulta {
+class ConsultaRepository {
   /**
    * Salva uma consulta no repositório (insert ou update)
    *
@@ -56,7 +56,6 @@ class RepositorioConsulta {
   }
 }
 
-const repositorioConsulta = new RepositorioConsulta();
+const consultaRepository = new ConsultaRepository();
 
-export default repositorioConsulta;
-``;
+export default consultaRepository;

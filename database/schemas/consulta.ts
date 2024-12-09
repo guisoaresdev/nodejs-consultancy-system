@@ -1,29 +1,37 @@
-const createModelConsulta = (Consulta, sequelize, DataTypes) => {
-  Consulta.init(
+import { Sequelize, DataTypes } from "sequelize";
+import Consulta from "../../domain/consulta"; // Sua classe de domínio
+
+class ConsultaSequelize extends Consulta {}
+
+const createModelConsulta = (
+  sequelize: Sequelize,
+  dataTypes: typeof DataTypes,
+) => {
+  ConsultaSequelize.init(
     {
       id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: dataTypes.UUID,
+        defaultValue: Sequelize.fn("gen_random_uuid"),
         primaryKey: true,
       },
       id_paciente: {
-        type: DataTypes.INTEGER,
+        type: dataTypes.UUID,
+        allowNull: false,
         references: {
-          model: Paciente,
+          model: "pacientes",
           key: "id",
         },
-        allowNull: false,
       },
       data_consulta: {
-        type: DataTypes.DATEONLY,
+        type: dataTypes.DATEONLY,
         allowNull: false,
       },
       hora_inicial: {
-        type: DataTypes.TIME,
+        type: dataTypes.TIME,
         allowNull: false,
       },
       hora_final: {
-        type: DataTypes.TIME,
+        type: dataTypes.TIME,
         allowNull: false,
       },
     },
@@ -33,6 +41,8 @@ const createModelConsulta = (Consulta, sequelize, DataTypes) => {
       tableName: "consultas",
     },
   );
+
+  return ConsultaSequelize;
 };
 
 export default createModelConsulta;

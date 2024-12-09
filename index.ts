@@ -1,7 +1,15 @@
+import ConsultorioController from "./controllers/consultorio.controller";
 import db from "./database/database";
 import ConsultorioView from "./views/consultorio.view";
 import PromptSync from "prompt-sync";
 
+// TODO:
+// 1. Separar a logica de inicialização
+// 2. Corrigir a chamada do controllador na view
+// 3. Adaptar o repository pra fornecer melhores logs em caso de erro
+// 4. Adaptar o controllador pro novo repository
+// 5. Validar todas as funcionalidades do sistema
+//
 (async () => {
   console.log("Inicializando o sistema...");
 
@@ -16,7 +24,8 @@ import PromptSync from "prompt-sync";
 
   // Configurações da interface do usuário
   const prompt = PromptSync();
-  const consultorioView = new ConsultorioView(prompt);
+  const consultorioController = new ConsultorioController();
+  const consultorioView = new ConsultorioView(prompt, consultorioController);
 
   // Exibe o menu principal
   try {

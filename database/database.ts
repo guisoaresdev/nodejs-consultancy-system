@@ -1,6 +1,4 @@
-import { Sequelize, SequelizeOptions, DataTypes } from "sequelize";
-import Consulta from "../domain/consulta";
-import Paciente from "../domain/paciente";
+import { Sequelize, DataTypes } from "sequelize";
 import dbConfig from "./config";
 import createModelConsulta from "./schemas/consulta";
 import createModelPaciente from "./schemas/paciente";
@@ -24,16 +22,16 @@ class Db {
           host: dbConfig.host,
           dialect: dbConfig.dialect,
           logging: false,
-        } as SequelizeOptions,
+        },
       );
 
       // Testa a conexão
       await this.sequelize.authenticate();
       console.log("Conexão com o banco de dados foi bem-sucedida.");
 
-      // Cria os modelos (tabelas)
-      createModelConsulta(Consulta, this.sequelize, DataTypes);
-      createModelPaciente(Paciente, this.sequelize, DataTypes);
+      const Paciente = createModelPaciente(this.sequelize, DataTypes);
+      // Criação dos modelos usando o método init
+      const Consulta = createModelConsulta(this.sequelize, DataTypes);
 
       // Cria os relacionamentos
       Paciente.hasMany(Consulta, {
@@ -44,6 +42,10 @@ class Db {
         foreignKey: "id_paciente",
         as: "paciente",
       });
+
+      // Sincroniza os modelos com o banco de dados
+      await this.sequelize.sync({ force: false });
+      console.log("Modelos sincronizados com o banco de dados.");
 
       return true;
     } catch (error) {

@@ -1,6 +1,6 @@
 import Paciente from "../domain/paciente";
 
-class RepositorioPaciente {
+class PacienteRepository {
   /**
    * Salva um paciente no repositório (insert ou update)
    *
@@ -39,6 +39,6 @@ class RepositorioPaciente {
   }
 }
 
-const repositorioPaciente = new RepositorioPaciente();
+const pacienteRepository = new PacienteRepository();
 
-export default repositorioPaciente;
+export default pacienteRepository;
