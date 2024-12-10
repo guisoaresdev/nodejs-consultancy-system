@@ -26,7 +26,8 @@ export default class NewConsultorioView {
     do {
       console.log("\nMenu Principal");
       console.log("1 - Cadastrar um paciente");
-      console.log("2 - Sair");
+      console.log("2 - Listar Pacientes");
+      console.log("3 - Sair");
 
       option = parseInt(this.getInput("Escolha uma opção: "));
 
@@ -35,107 +36,100 @@ export default class NewConsultorioView {
           await this.cadastrarPaciente();
           break;
         case 2:
+          await this.listarPacientes();
+          break;
+        case 3:
           console.log("Encerrando o programa...");
           break;
         default:
           console.log("Opção inválida, tente novamente.");
       }
-    } while (option !== 2);
+    } while (option !== 3);
   }
 
   async cadastrarPaciente() {
+    let cpfValido: boolean = false;
+    let nomeValido: boolean = false;
+    let dataValida: boolean = false;
+    let IdadeValida: boolean = false;
+
+    let cpf = this.getInput("Informe um CPF válido: ");
+    while (!cpfValido) {
+      cpf = this.formatarCpf(cpf);
+
+      if (!this.isCpfValido(cpf)) {
+        console.log("CPF não é válido");
+        cpf = this.getInput("Informe um CPF válido: ");
+        continue;
+      }
+
+      const pacienteExistente =
+        await this.getController().buscaPacientePorCPF(cpf);
+      if (pacienteExistente) {
+        console.log("CPF já cadastrado");
+        cpf = this.getInput("Informe um CPF válido: ");
+        continue;
+      }
+
+      cpfValido = true;
+    }
+
+    let nome = this.getInput("Informe o nome: ");
+    while (!nomeValido) {
+      if (!this.nomeTemTamanhoMinimo(nome, 5)) {
+        console.log(`Nome deve ter no mínimo 5 caracteres `);
+        nome = this.getInput("Informe o nome: ");
+        continue;
+      }
+
+      nomeValido = true;
+    }
+
+    const dataAtual = new Date();
+    var dataNasc = new Date();
+
+    var dataNascStr = this.getInput(
+      "Informe a data de nascimento (DD/MM/YYYY): ",
+    );
+    while (!dataValida) {
+      if (!this.validaFormatoData(dataNascStr)) {
+        console.log("Data deve ser no formato DD/MM/YYYY");
+        dataNascStr = this.getInput(
+          "Informe a data de nascimento (DD/MM/YYYY): ",
+        );
+        continue;
+      }
+
+      dataNasc = this.formataData(dataNascStr);
+      if (!this.validaData(dataNasc)) {
+        console.log("Data de Nascimento inválida");
+        dataNascStr = this.getInput(
+          "Informe a data de nascimento (DD/MM/YYYY): ",
+        );
+        continue;
+      }
+
+      if (!this.validaIdadeMinima(dataNasc)) {
+        console.log("Paciente deve ter no mínimo 13 anos de idade");
+        dataNascStr = this.getInput(
+          "Informe a data de nascimento (DD/MM/YYYY): ",
+        );
+        continue;
+      }
+
+      if (dataNasc > dataAtual) {
+        console.log("Data de Nascimento não pode ser após a data presente.");
+        dataNascStr = this.getInput(
+          "Informe a data de nascimento (DD/MM/YYYY): ",
+        );
+        continue;
+      }
+
+      dataValida = true;
+    }
     try {
-      let cpfValido: boolean = false;
-      let nomeValido: boolean = false;
-      let dataValida: boolean = false;
-      let IdadeValida: boolean = false;
-
-      let cpf = this.getInput("Informe um CPF válido: ");
-      while (!cpfValido) {
-        cpf = this.formatarCpf(cpf);
-
-        if (!this.isCpfValido(cpf)) {
-          console.log("CPF não é válido");
-          cpf = this.getInput("Informe um CPF válido: ");
-          continue;
-        }
-
-        const pacienteExistente =
-          await this.getController().buscaPacientePorCPF(cpf);
-        if (pacienteExistente) {
-          console.log("CPF já cadastrado");
-          cpf = this.getInput("Informe um CPF válido: ");
-          continue;
-        }
-
-        cpfValido = true;
-      }
-
-      let nome = this.getInput("Informe o nome: ");
-      while (!nomeValido) {
-        if (!this.nomeTemTamanhoMinimo(nome, 5)) {
-          console.log(`Nome deve ter no mínimo 5 caracteres `);
-          nome = this.getInput("Informe o nome: ");
-          continue;
-        }
-
-        nomeValido = true;
-      }
-
-      const dataAtual = new Date();
-      var dataNasc = new Date();
-
-      var dataNascStr = this.getInput(
-        "Informe a data de nascimento (DD/MM/YYYY): ",
-      );
-      while (!dataValida) {
-        if (!this.validaFormatoData(dataNascStr)) {
-          console.log("Data deve ser no formato DD/MM/YYYY");
-          dataNascStr = this.getInput(
-            "Informe a data de nascimento (DD/MM/YYYY): ",
-          );
-          continue;
-        }
-
-        dataNasc = this.formataData(dataNascStr);
-        if (!this.validaData(dataNasc)) {
-          console.log("Data de Nascimento inválida");
-          dataNascStr = this.getInput(
-            "Informe a data de nascimento (DD/MM/YYYY): ",
-          );
-          continue;
-        }
-
-        if (!this.validaIdadeMinima(dataNasc)) {
-          console.log("Paciente deve ter no mínimo 13 anos de idade");
-          dataNascStr = this.getInput(
-            "Informe a data de nascimento (DD/MM/YYYY): ",
-          );
-          continue;
-        }
-
-        if (dataNasc > dataAtual) {
-          console.log("Data de Nascimento não pode ser após a data presente.");
-          dataNascStr = this.getInput(
-            "Informe a data de nascimento (DD/MM/YYYY): ",
-          );
-          continue;
-        }
-
-        dataValida = true;
-      }
-
-      const paciente = await this.getController().cadastrarPaciente(
-        cpf,
-        nome,
-        dataNasc,
-      );
-      if (paciente) {
-        console.log("Paciente criado com sucesso!");
-        return paciente;
-      } else {
-        return null;
-      }
+      await this.getController().cadastrarPaciente(cpf, nome, dataNasc);
+      console.log("Paciente criado com sucesso!");
     } catch (error) {
       console.log(
         "Erro ao cadastrar paciente: " +
@@ -145,7 +139,27 @@ export default class NewConsultorioView {
     }
   }
 
+  async listarPacientes() {
+    try {
+      const pacientes = await this.getController().listarPacientes();
+
+      if (pacientes.length === 0) {
+        console.log("Nenhum paciente encontrado.");
+      } else {
+        pacientes.forEach((paciente) => {
+          console.log(`${paciente.nome} - ${paciente.cpf} - ${paciente.idade}`);
+        });
+      }
+    } catch (error) {
+      console.log("Erro ao listar pacientes: " + error.message);
+    }
+  }
+
   formatarCpf(cpf) {
+    if (!cpf) {
+      console.log("CPF inválido");
+      return "";
+    }
     cpf = cpf.replace(/[^\d]+/g, "");
     return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   }
@@ -215,7 +229,6 @@ export default class NewConsultorioView {
     const [, horas, minutos] = horario.match(/^(\d{2}):(\d{2})$/) || [];
     const minutosInt = parseInt(minutos, 10);
 
-    // Verifica se os minutos são múltiplos de 15
     return minutosInt % 15 === 0;
   }
 

@@ -59,7 +59,7 @@ export default class ConsultorioView {
   async listarPacientes() {
     try {
       const pacientes = await this.consultorioController.listarPacientes();
-      console.log(pacientes);
+      console.log("Pacientes encontrados: ", JSON.stringify(pacientes, null, 2));
 
       if (pacientes.length === 0) {
         console.log("Nenhum paciente encontrado.");

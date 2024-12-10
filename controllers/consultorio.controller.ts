@@ -3,14 +3,9 @@ import ConsultorioService from "../services/consultorio.service";
 export default class ConsultorioController {
 
   // Função para cadastrar um paciente
-  async cadastrarPaciente(cpf: string, nome: string, dataNasc: Date): Promise<string> {
+  async cadastrarPaciente(cpf: string, nome: string, dataNasc: Date): Promise<void> {
     try {
       const resultado = await ConsultorioService.cadastrarPaciente(cpf, nome, dataNasc);
-      if (resultado) {
-        return "Paciente cadastrado com sucesso!";
-      } else {
-        return "Erro ao cadastrar paciente.";
-      }
     } catch (error) {
       throw new Error("Erro ao cadastrar paciente: " + error.message);
     }

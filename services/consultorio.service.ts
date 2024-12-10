@@ -3,48 +3,20 @@ import ConsultaRepository from "../repositories/consulta.repository";
 import Paciente from "../domain/paciente";
 import Consulta from "../domain/consulta";
 
-class ConsultorioService {
-  async cadastrarPaciente(
-    cpf: string,
-    nome: string,
-    dataNasc: Date,
-  ): Promise<boolean> {
+class ConsultorioService { 
+  async cadastrarPaciente(cpf: string, nome: string, dataNasc: Date): Promise<boolean> {
     try {
       const idade = this.calcularIdade(dataNasc);
-      console.log("CPF:", cpf);
-      console.log("Nome:", nome);
-      console.log("Data de nascimento:", dataNasc);
-      console.log("Idade:", idade);
-      const result = Paciente.of(cpf, nome, dataNasc, idade);
-      if (result.isSuccess) {
-        const paciente = result.value; // Aqui `value` é seguro de acessar
-        await PacienteRepository.salva(paciente);
-        return true;
-      } else {
-        console.log(result.errors); // Erros da validação
-        return false;
-      }
+      const paciente = Paciente.build({ cpf: cpf, nome: nome, data_nasc: dataNasc, idade: idade });
+      await PacienteRepository.salva(paciente);
     } catch (error) {
-      console.error("Erro ao criar paciente: ", error);
-      return false;
+      console.error(error);
     }
   }
 
-  async agendarConsulta(
-    pacienteId: number,
-    dataConsulta: Date,
-    horaInicial: string,
-    horaFinal: string,
-  ): Promise<string> {
+  async agendarConsulta(pacienteId: number, dataConsulta: Date, horaInicial: string, horaFinal: string): Promise<string> {
     try {
-      // Usando build ao invés de new
-      const consulta = Consulta.build({
-        pacienteId,
-        dataConsulta,
-        horaInicial,
-        horaFinal,
-      });
-
+      const consulta = Consulta.build({ pacienteId, dataConsulta, horaInicial, horaFinal });
       await ConsultaRepository.salva(consulta);
       return "Consulta agendada com sucesso!";
     } catch (error) {
@@ -52,11 +24,7 @@ class ConsultorioService {
     }
   }
 
-  async cancelarConsulta(
-    cpf: string,
-    dataConsulta: Date,
-    horaInicial: string,
-  ): Promise<string> {
+  async cancelarConsulta(cpf: string, dataConsulta: Date, horaInicial: string): Promise<string> {
     try {
       const consultas = await ConsultaRepository.buscaPorPacienteCPF(cpf);
       const agendamento = consultas.find(
@@ -84,7 +52,6 @@ class ConsultorioService {
     }
   }
 
-  // Método para verificar se paciente existe por CPF
   async buscaPacientePorCPF(cpf: string): Promise<boolean> {
     try {
       const paciente = await PacienteRepository.buscaPorCPF(cpf);

@@ -23,10 +23,10 @@ class ConsultaRepository {
   /**
    * Recupera uma consulta pelo ID
    *
-   * @param {number} id
+   * @param {DataTypes.UUID} id
    * @returns {Promise<Consulta | null>} Consulta ou null, caso não exista
    */
-  async buscaPorID(id: number): Promise<Consulta | null> {
+  async buscaPorID(id: DataTypes.UUID): Promise<Consulta | null> {
     return await Consulta.findByPk(id);
   }
 

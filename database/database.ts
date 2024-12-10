@@ -1,7 +1,7 @@
 import { Sequelize, DataTypes } from "sequelize";
 import dbConfig from "./config";
-import createModelConsulta from "./schemas/consulta";
-import createModelPaciente from "./schemas/paciente";
+import Consulta from "../domain/consulta";
+import Paciente from "../domain/paciente";
 
 class Db {
   private sequelize!: Sequelize;
@@ -29,21 +29,25 @@ class Db {
       await this.sequelize.authenticate();
       console.log("Conexão com o banco de dados foi bem-sucedida.");
 
-      const Paciente = createModelPaciente(this.sequelize, DataTypes);
-      // Criação dos modelos usando o método init
-      const Consulta = createModelConsulta(this.sequelize, DataTypes);
+      Paciente.initialize(this.getSequelize());
+      Consulta.initialize(this.getSequelize());
 
-      // Cria os relacionamentos
       Paciente.hasMany(Consulta, {
-        foreignKey: "id_paciente",
+        foreignKey: {
+          name: "idPaciente",
+          type: DataTypes.UUID,
+        },
         as: "consultas",
       });
+
       Consulta.belongsTo(Paciente, {
-        foreignKey: "id_paciente",
+        foreignKey: {
+          name: "idPaciente",
+          type: DataTypes.UUID,
+        },
         as: "paciente",
       });
 
-      // Sincroniza os modelos com o banco de dados
       await this.sequelize.sync({ force: false });
       console.log("Modelos sincronizados com o banco de dados.");
 
