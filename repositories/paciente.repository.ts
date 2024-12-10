@@ -28,6 +28,10 @@ class PacienteRepository {
   async buscaPorCPF(cpf: string): Promise<Paciente | null> {
     return await Paciente.findOne({ where: { cpf } });
   }
+  
+  async buscaPorID(id: string): Promise<Paciente | null> {
+    return await Paciente.findOne({ where: { id }});
+  }
 
   /**
    * Recupera todos os pacientes

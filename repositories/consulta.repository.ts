@@ -52,7 +52,15 @@ class ConsultaRepository {
    * @returns {Promise<Consulta[]>} Lista de consultas
    */
   async buscaTodas(): Promise<Consulta[]> {
-    return await Consulta.findAll();
+    return await Consulta.findAll({
+      include: [
+        {
+          model: Paciente, // Modelo do paciente
+          as: "paciente", // Alias usado no relacionamento
+          attributes: ["nome", "cpf"], // Apenas os atributos necessários
+        },
+      ],
+    });
   }
 }
 

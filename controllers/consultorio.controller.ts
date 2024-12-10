@@ -1,11 +1,13 @@
 import ConsultorioService from "../services/consultorio.service";
+import Paciente from "../domain/paciente";
 
 export default class ConsultorioController {
 
   // Função para cadastrar um paciente
-  async cadastrarPaciente(cpf: string, nome: string, dataNasc: Date): Promise<void> {
+  async cadastrarPaciente(cpf: string, nome: string, dataNasc: Date): Promise<string> {
     try {
-      const resultado = await ConsultorioService.cadastrarPaciente(cpf, nome, dataNasc);
+      const idPaciente = await ConsultorioService.cadastrarPaciente(cpf, nome, dataNasc);
+      return idPaciente;
     } catch (error) {
       throw new Error("Erro ao cadastrar paciente: " + error.message);
     }
@@ -20,8 +22,18 @@ export default class ConsultorioController {
     }
   }
 
-  async agendarConsulta(pacienteId: number, dataConsulta: Date, horaInicial: string, horaFinal: string): Promise<string> {
+  async listarConsultas(): Promise<any[]> {
     try {
+      const consultas = await ConsultorioService.buscarConsultas();
+      return consultas;
+    } catch (error) {
+      throw new Error("Erro ao listar consultas: " + error.message);
+    }
+  }
+
+  async agendarConsulta(pacienteId: string, dataConsulta: Date, horaInicial: string, horaFinal: string): Promise<string> {
+    try {
+      console.log("Recebi no controllador: ", dataConsulta, horaInicial, horaFinal);
       const resultado = await ConsultorioService.agendarConsulta(pacienteId, dataConsulta, horaInicial, horaFinal);
       return resultado;
     } catch (error) {
@@ -38,13 +50,13 @@ export default class ConsultorioController {
     }
   }
 
-  async buscaPacientePorCPF(cpf: string): Promise<boolean> {
+  async buscaPacientePorCPF(cpf: string): Promise<Paciente | null> {
     try {
       const pacienteExiste = await ConsultorioService.buscaPacientePorCPF(cpf);
       return pacienteExiste;
     } catch (error) {
       console.log("Erro ao buscar por CPF: ", error.message);
-      return false;
+      return null;
     }
   }
 

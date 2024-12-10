@@ -27,7 +27,8 @@ export default class NewConsultorioView {
       console.log("\nMenu Principal");
       console.log("1 - Cadastrar um paciente");
       console.log("2 - Listar Pacientes");
-      console.log("3 - Sair");
+      console.log("3 - Agenda");
+      console.log("4 - Sair");
 
       option = parseInt(this.getInput("Escolha uma opção: "));
 
@@ -39,12 +40,64 @@ export default class NewConsultorioView {
           await this.listarPacientes();
           break;
         case 3:
+          await this.menuAgenda();
+          break;
+        case 4:
           console.log("Encerrando o programa...");
           break;
         default:
           console.log("Opção inválida, tente novamente.");
+          break;
+      }
+    } while (option !== 4);
+  }
+
+  async menuAgenda() {
+    let option;
+    do {
+      console.log("\nAgenda");
+      console.log("1 - Agendar consulta");
+      console.log("2 - Listar agenda");
+      console.log("3 - Voltar para o menu principal");
+
+      option = parseInt(this.getInput("Escolha uma opção: "));
+
+      switch (option) {
+        case 1:
+          await this.agendarConsulta();
+          break;
+        case 2:
+          console.log("Listando agenda...");
+          await this.listarConsultas();
+          break;
+        case 3:
+          console.log("Voltando ao menu principal...");
+          break;
+        default:
+          console.log("Opção inválida, tente novamente.");
+          break;
       }
     } while (option !== 3);
+  }
+
+
+  async listarConsultas() {
+    try {
+      const consultas = await this.getController().listarConsultas();
+
+      if (consultas.length === 0) {
+        console.log("Nenhuma consulta encontrada.");
+      } else {
+        consultas.forEach((consulta) => {
+          const paciente = consulta.paciente; // Dados do paciente incluídos
+          console.log(
+            `Paciente: ${paciente.nome} | CPF: ${paciente.cpf} | Data da consulta: ${consulta.dataConsulta} | Hora Inicial: ${consulta.horaInicial} | Hora Final: ${consulta.horaFinal}`
+          );
+        });
+      }
+    } catch (error) {
+      console.log("Erro ao listar as consultas: " + error.message);
+    }
   }
 
   async cadastrarPaciente() {
@@ -128,14 +181,149 @@ export default class NewConsultorioView {
       dataValida = true;
     }
     try {
-      await this.getController().cadastrarPaciente(cpf, nome, dataNasc);
+      const idPaciente = await this.getController().cadastrarPaciente(cpf, nome, dataNasc);
       console.log("Paciente criado com sucesso!");
+      return idPaciente;
     } catch (error) {
       console.log(
         "Erro ao cadastrar paciente: " +
           (error instanceof Error ? error.message : error),
       );
       return null;
+    }
+  }
+
+  async agendarConsulta(): Promise<void> {
+    try {
+      let paciente: any;
+      let idPaciente: string | null= "0";
+      // Buscar todos os pacientes no banco de dados
+      const pacientes = await this.getController().listarPacientes();
+
+      if (pacientes.length !== 0) {
+        const pacienteExistente = this.getInput(
+          "Deseja vincular um paciente já existente ao agendamento? (Y/N): ",
+        );
+
+        if (pacienteExistente === "Y") {
+          await this.listarPacientes();
+          const indexPaciente = parseInt(this.getInput("Insira o ID do paciente que deseja marcar a consulta: "));
+
+          if (indexPaciente >= 0 && indexPaciente < pacientes.length) {
+            paciente = pacientes[indexPaciente];
+            idPaciente = paciente.dataValues.id;
+          } else {
+            console.log("Index do paciente inválido");
+            return; // Retorna caso o índice seja inválido
+          }
+        } else {
+          idPaciente = await this.cadastrarPaciente();
+        }
+      } else {
+        console.log(
+          "Nenhum paciente registrado no sistema, criando novo paciente.",
+        );
+        idPaciente = await this.cadastrarPaciente();
+      }
+
+      if (idPaciente == null) {
+        console.log("idPaciente nulo");
+        return;
+      }
+
+      if (paciente) {
+        let validaDataConsulta = false;
+        let validaHorarioInicial = false;
+        let validaHorarioFinal = false;
+
+        let dataConsultaStr = this.getInput(
+          "Informe a data da consulta (DD/MM/YYYY): ",
+        );
+        let dataConsulta: Date;
+
+        while (!validaDataConsulta) {
+          if (!this.validaFormatoData(dataConsultaStr)) {
+            console.log("Data deve ser no formato DD/MM/YYYY");
+            dataConsultaStr = this.getInput(
+              "Informe a data da consulta (DD/MM/YYYY): ",
+            );
+            continue;
+          }
+
+          dataConsulta = this.formataData(dataConsultaStr);
+          if (!this.validaData(dataConsulta)) {
+            console.log("Data da consulta inválida");
+            dataConsultaStr = this.getInput(
+              "Informe a data da consulta (DD/MM/YYYY): ",
+            );
+            continue;
+          }
+
+          if (dataConsulta < new Date()) {
+            console.log(
+              "Data Inválida: Consulta com dia anterior a data de hoje",
+            );
+            dataConsultaStr = this.getInput(
+              "Informe a data da consulta (DD/MM/YYYY): ",
+            );
+            continue;
+          }
+
+          validaDataConsulta = true;
+        }
+
+        let horaInicial = this.getInput("Informe a hora inicial (HH:mm): ");
+        while (!validaHorarioInicial) {
+          if (!this.validarHorario(horaInicial)) {
+            console.log("As horas devem ser no formato HH:mm");
+            horaInicial = this.getInput("Informe a hora inicial (HH:mm): ");
+            continue;
+          }
+
+          if (!this.validarDisponibilidadeHorario(horaInicial)) {
+            console.log(
+              "Os horários disponíveis são de 15 em 15 minutos. Ex: 20:00, 20:15, 20:30",
+            );
+            horaInicial = this.getInput("Informe a hora inicial (HH:mm): ");
+            continue;
+          }
+
+          validaHorarioInicial = true;
+        }
+
+        let horaFinal = this.getInput("Informe a hora final (HH:mm): ");
+        while (!validaHorarioFinal) {
+          if (!this.validarHorario(horaFinal)) {
+            console.log("As horas devem ser no formato HH:mm");
+            horaFinal = this.getInput("Informe a hora inicial (HH:mm): ");
+            continue;
+          }
+
+          if (!this.validarDisponibilidadeHorario(horaFinal)) {
+            console.log(
+              "Os horários disponíveis são de 15 em 15 minutos. Ex: 20:00, 20:15, 20:30",
+            );
+            horaFinal = this.getInput("Informe a hora inicial (HH:mm): ");
+            continue;
+          }
+
+          if (!this.validarHoraAgendamento(horaInicial, horaFinal)) {
+            console.log("O horário final é anterior ao horário inicial");
+            horaFinal = this.getInput("Informe a hora inicial (HH:mm): ");
+            continue;
+          }
+
+          validaHorarioFinal = true;
+        }
+
+        // Criação do agendamento no banco
+        await this.getController().agendarConsulta(idPaciente, dataConsulta, horaInicial, horaFinal);
+        console.log("Consulta agendada com sucesso!");
+      } else {
+        console.log("Paciente está null, impossível finalizar o agendamento.");
+      }
+    } catch (err) {
+      console.log("Erro ao agendar consulta: " + err.message);
     }
   }
 
@@ -146,8 +334,8 @@ export default class NewConsultorioView {
       if (pacientes.length === 0) {
         console.log("Nenhum paciente encontrado.");
       } else {
-        pacientes.forEach((paciente) => {
-          console.log(`${paciente.nome} - ${paciente.cpf} - ${paciente.idade}`);
+        pacientes.forEach((paciente, index) => {
+          console.log(`${index}. Nome: ${paciente.nome} CPF: ${paciente.cpf} Idade: ${paciente.idade}`);
         });
       }
     } catch (error) {
