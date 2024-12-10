@@ -33,7 +33,6 @@ export default class ConsultorioController {
 
   async agendarConsulta(pacienteId: string, dataConsulta: Date, horaInicial: string, horaFinal: string): Promise<string> {
     try {
-      console.log("Recebi no controllador: ", dataConsulta, horaInicial, horaFinal);
       const resultado = await ConsultorioService.agendarConsulta(pacienteId, dataConsulta, horaInicial, horaFinal);
       return resultado;
     } catch (error) {
@@ -56,6 +55,16 @@ export default class ConsultorioController {
       return pacienteExiste;
     } catch (error) {
       console.log("Erro ao buscar por CPF: ", error.message);
+      return null;
+    }
+  }
+
+  async buscaPacientePorId(id: string): Promise<Paciente | null> {
+    try {
+      const pacienteExiste = await ConsultorioService.buscaPacientePorID(id);
+      return pacienteExiste;
+    } catch (error) {
+      console.log("Erro ao buscar por ID: ", error.message);
       return null;
     }
   }

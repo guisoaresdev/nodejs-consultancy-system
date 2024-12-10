@@ -1,4 +1,5 @@
 import Paciente from "../domain/paciente";
+import Consulta from "../domain/consulta";
 
 class PacienteRepository {
   /**
@@ -17,6 +18,14 @@ class PacienteRepository {
    */
   async remove(paciente: Paciente): Promise<void> {
     if (paciente !== null) await paciente.destroy();
+  }
+
+  async removePorID(id: string): Promise<void> {
+    if (id !== null) await Paciente.destroy({
+      where: {
+        id: id
+      }
+    })
   }
 
   /**
@@ -39,7 +48,13 @@ class PacienteRepository {
    * @returns {Promise<Paciente[]>} Lista de pacientes
    */
   async buscaTodos(): Promise<Paciente[]> {
-    return await Paciente.findAll();
+    return await Paciente.findAll({
+      include: [{
+        model: Consulta,
+        as: "consultas"
+      }],
+      order: [[{ model: Consulta, as: "consultas" }, 'dataConsulta', 'ASC']] // Ordena as consultas por data
+    });
   }
 }
 

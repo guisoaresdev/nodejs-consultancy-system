@@ -80,7 +80,6 @@ export default class NewConsultorioView {
     } while (option !== 3);
   }
 
-
   async listarConsultas() {
     try {
       const consultas = await this.getController().listarConsultas();
@@ -89,9 +88,11 @@ export default class NewConsultorioView {
         console.log("Nenhuma consulta encontrada.");
       } else {
         consultas.forEach((consulta) => {
-          const paciente = consulta.paciente; // Dados do paciente incluídos
+          const data: Date = new Date(consulta.dataConsulta);
+          const dataFormatada = `${String(data.getDate() + 1).padStart(2, "0")}/${String(data.getMonth() + 1).padStart(2, "0")}/${data.getFullYear()}`;
+          const paciente = consulta.paciente;
           console.log(
-            `Paciente: ${paciente.nome} | CPF: ${paciente.cpf} | Data da consulta: ${consulta.dataConsulta} | Hora Inicial: ${consulta.horaInicial} | Hora Final: ${consulta.horaFinal}`
+            `Paciente: ${paciente.nome} | CPF: ${paciente.cpf} | Data da consulta: ${dataFormatada} | Hora Inicial: ${consulta.horaInicial} | Hora Final: ${consulta.horaFinal}`,
           );
         });
       }
@@ -181,7 +182,11 @@ export default class NewConsultorioView {
       dataValida = true;
     }
     try {
-      const idPaciente = await this.getController().cadastrarPaciente(cpf, nome, dataNasc);
+      const idPaciente = await this.getController().cadastrarPaciente(
+        cpf,
+        nome,
+        dataNasc,
+      );
       console.log("Paciente criado com sucesso!");
       return idPaciente;
     } catch (error) {
@@ -196,7 +201,7 @@ export default class NewConsultorioView {
   async agendarConsulta(): Promise<void> {
     try {
       let paciente: any;
-      let idPaciente: string | null= "0";
+      let idPaciente: string | null = "0";
       // Buscar todos os pacientes no banco de dados
       const pacientes = await this.getController().listarPacientes();
 
@@ -207,7 +212,11 @@ export default class NewConsultorioView {
 
         if (pacienteExistente === "Y") {
           await this.listarPacientes();
-          const indexPaciente = parseInt(this.getInput("Insira o ID do paciente que deseja marcar a consulta: "));
+          const indexPaciente = parseInt(
+            this.getInput(
+              "Insira o ID do paciente que deseja marcar a consulta: ",
+            ),
+          );
 
           if (indexPaciente >= 0 && indexPaciente < pacientes.length) {
             paciente = pacientes[indexPaciente];
@@ -218,12 +227,14 @@ export default class NewConsultorioView {
           }
         } else {
           idPaciente = await this.cadastrarPaciente();
+          paciente = await this.getController().buscaPacientePorId(idPaciente);
         }
       } else {
         console.log(
           "Nenhum paciente registrado no sistema, criando novo paciente.",
         );
         idPaciente = await this.cadastrarPaciente();
+        paciente = await this.getController().buscaPacientePorId(idPaciente);
       }
 
       if (idPaciente == null) {
@@ -317,7 +328,12 @@ export default class NewConsultorioView {
         }
 
         // Criação do agendamento no banco
-        await this.getController().agendarConsulta(idPaciente, dataConsulta, horaInicial, horaFinal);
+        await this.getController().agendarConsulta(
+          idPaciente,
+          dataConsulta,
+          horaInicial,
+          horaFinal,
+        );
         console.log("Consulta agendada com sucesso!");
       } else {
         console.log("Paciente está null, impossível finalizar o agendamento.");
@@ -335,7 +351,21 @@ export default class NewConsultorioView {
         console.log("Nenhum paciente encontrado.");
       } else {
         pacientes.forEach((paciente, index) => {
-          console.log(`${index}. Nome: ${paciente.nome} CPF: ${paciente.cpf} Idade: ${paciente.idade}`);
+          console.log(
+            `${index + 1}. Nome: ${paciente.nome} CPF: ${paciente.cpf} Idade: ${paciente.idade}`,
+          );
+
+          if (paciente.consultas && paciente.consultas.length > 0) {
+            paciente.consultas.forEach((consulta) => {
+              const data: Date = new Date(consulta.dataConsulta);
+              const dataFormatada = `${String(data.getDate() + 1).padStart(2, "0")}/${String(data.getMonth() + 1).padStart(2, "0")}/${data.getFullYear()}`;
+              console.log(
+                `  - Consulta para ${dataFormatada} as ${consulta.horaInicial} até ${consulta.horaFinal}`,
+              );
+            });
+          } else {
+            console.log("  Nenhuma consulta encontrada para este paciente.");
+          }
         });
       }
     } catch (error) {

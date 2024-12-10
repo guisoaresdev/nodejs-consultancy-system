@@ -1,5 +1,6 @@
 import Consulta from "../domain/consulta";
 import Paciente from "../domain/paciente";
+import { Op } from "sequelize";
 
 class ConsultaRepository {
   /**
@@ -20,13 +21,60 @@ class ConsultaRepository {
     if (consulta !== null) await consulta.destroy();
   }
 
+
+  /**
+    * Remove uma consulta com base em dataConsulta, horaInicial e horaFinal
+    *
+    * @param {string} cpf - CPF do Paciente
+    * @param {Date} dataConsulta - Data da consulta
+    * @param {string} horaInicial - Hora inicial da consulta (formato "HH:mm")
+    * @returns {Promise<number>} Número de consultas removidas
+    */
+  async removePorDataEHorario(cpf: string, dataConsulta: Date, horaInicial: string): Promise<number> {
+    const paciente = await Paciente.findOne({where: { cpf }});
+    if (!paciente) {
+      return 0;
+    }
+
+    const consultasRemovidas = await Consulta.destroy({
+      where: {
+        idPaciente: paciente.dataValues.id,
+        dataConsulta: {
+          [Op.eq]: dataConsulta,
+        },
+        horaInicial: {
+          [Op.eq]: horaInicial,
+        },
+      },
+    });
+
+    return consultasRemovidas;
+  }
+
+  /**
+   * Remove todas as consultas inválidas (data anterior à data atual)
+   *
+   * @returns {Promise<number>} Número de consultas removidas
+   */
+  async removeConsultasInvalidas(): Promise<number> {
+    const hoje = new Date();
+    const consultasRemovidas = await Consulta.destroy({
+      where: {
+        dataConsulta: {
+          [Op.lt]: hoje, // Condição: dataConsulta < hoje
+        },
+      },
+    });
+    return consultasRemovidas;
+  }
+
   /**
    * Recupera uma consulta pelo ID
    *
    * @param {DataTypes.UUID} id
    * @returns {Promise<Consulta | null>} Consulta ou null, caso não exista
    */
-  async buscaPorID(id: DataTypes.UUID): Promise<Consulta | null> {
+  async buscaPorID(id: string): Promise<Consulta | null> {
     return await Consulta.findByPk(id);
   }
 
@@ -60,6 +108,7 @@ class ConsultaRepository {
           attributes: ["nome", "cpf"], // Apenas os atributos necessários
         },
       ],
+      order: [['dataConsulta', 'ASC']]
     });
   }
 }

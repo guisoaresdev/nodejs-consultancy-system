@@ -19,7 +19,6 @@ class ConsultorioService {
 
   async agendarConsulta(idPaciente: string, dataConsulta: Date, horaInicial: string, horaFinal: string): Promise<string> {
     try {
-      console.log("Recebi na service: ", dataConsulta, horaInicial, horaFinal);
       const consulta = Consulta.build({ idPaciente, dataConsulta, horaInicial, horaFinal });
       await ConsultaRepository.salva(consulta);
       return "Consulta agendada com sucesso!";
@@ -30,16 +29,9 @@ class ConsultorioService {
 
   async cancelarConsulta(cpf: string, dataConsulta: Date, horaInicial: string): Promise<string> {
     try {
-      const consultas = await ConsultaRepository.buscaPorPacienteCPF(cpf);
-      const agendamento = consultas.find(
-        (consulta) =>
-          consulta.data_consulta === dataConsulta &&
-          consulta.hora_inicial === horaInicial,
-      );
-
-      if (agendamento) {
-        await ConsultaRepository.remove(agendamento);
-        return "Consulta cancelada com sucesso!";
+      const consultasRemovidas = await ConsultaRepository.removePorDataEHorario(cpf, dataConsulta, horaInicial);
+      if (consultasRemovidas) {
+        return `${consultasRemovidas} Consulta(s) foram removidas com sucesso!`;
       } else {
         return "Nenhum agendamento encontrado para este CPF e data.";
       }
