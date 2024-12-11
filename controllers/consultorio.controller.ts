@@ -49,6 +49,24 @@ export default class ConsultorioController {
     }
   }
 
+  async buscarConsultasValidasPorCPF(cpf: string): Promise<boolean> {
+    try {
+      const validas = await ConsultorioService.buscaConsultasValidasPorCPF(cpf);
+      return validas;
+    } catch (error) {
+      throw new Error("Erro ao buscar consultas válidas por cpf: ", error.message);
+    }
+  }
+
+  async removerPacientePorCPF(cpf: string): Promise<boolean> {
+    try {
+      const resultado = await ConsultorioService.removerPacientePorCPF(cpf);
+      return resultado;
+    } catch (error) {
+      throw new Error("Erro ao cancelar consulta: " + error.message);
+    }
+  }
+
   async buscaPacientePorCPF(cpf: string): Promise<Paciente | null> {
     try {
       const pacienteExiste = await ConsultorioService.buscaPacientePorCPF(cpf);

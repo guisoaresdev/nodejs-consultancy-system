@@ -3,6 +3,8 @@ import ConsultaRepository from "../repositories/consulta.repository";
 import Paciente from "../domain/paciente";
 import Consulta from "../domain/consulta";
 
+// TODO: Remover todos os returns com console.log
+
 class ConsultorioService { 
   async cadastrarPaciente(cpf: string, nome: string, dataNasc: Date): Promise<string> {
     try {
@@ -17,24 +19,47 @@ class ConsultorioService {
     }
   }
 
-  async agendarConsulta(idPaciente: string, dataConsulta: Date, horaInicial: string, horaFinal: string): Promise<string> {
+  async agendarConsulta(idPaciente: string, dataConsulta: Date, horaInicial: string, horaFinal: string): Promise<boolean> {
     try {
       const consulta = Consulta.build({ idPaciente, dataConsulta, horaInicial, horaFinal });
       await ConsultaRepository.salva(consulta);
-      return "Consulta agendada com sucesso!";
+      return true;
     } catch (error) {
-      throw new Error("Erro ao agendar consulta: " + error.message);
+      return false;
     }
   }
 
-  async cancelarConsulta(cpf: string, dataConsulta: Date, horaInicial: string): Promise<string> {
+  async cancelarConsulta(cpf: string, dataConsulta: Date, horaInicial: string): Promise<boolean> {
     try {
       const consultasRemovidas = await ConsultaRepository.removePorDataEHorario(cpf, dataConsulta, horaInicial);
       if (consultasRemovidas) {
-        return `${consultasRemovidas} Consulta(s) foram removidas com sucesso!`;
-      } else {
-        return "Nenhum agendamento encontrado para este CPF e data.";
+        return true;
       }
+      return false;
+    } catch (error) {
+      throw new Error("Erro ao cancelar consulta: " + error.message);
+    }
+  }
+
+  async buscaConsultasValidasPorCPF(cpf: string): Promise<boolean> {
+    try {
+      const consultasValidas = await ConsultaRepository.buscaConsultasValidasPorCPF(cpf);
+      if (consultasValidas.length !== 0) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      throw new Error("Erro ao buscar consultas validas por CPF:");
+    }
+
+  }
+
+
+  async removerPacientePorCPF(cpf: string): Promise<boolean> {
+    try {
+      const consultasRemovidas = await PacienteRepository.removePorCPF(cpf);
+      return true;
     } catch (error) {
       throw new Error("Erro ao cancelar consulta: " + error.message);
     }

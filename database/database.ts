@@ -2,6 +2,7 @@ import { Sequelize, DataTypes } from "sequelize";
 import dbConfig from "./config";
 import Consulta from "../domain/consulta";
 import Paciente from "../domain/paciente";
+import { seedConsultas } from "../seeders/insere.consultas";
 
 class Db {
   private sequelize!: Sequelize;
@@ -47,6 +48,8 @@ class Db {
         },
         as: "paciente",
       });
+
+      await seedConsultas();
 
       await this.sequelize.sync({ force: false });
       console.log("Modelos sincronizados com o banco de dados.");

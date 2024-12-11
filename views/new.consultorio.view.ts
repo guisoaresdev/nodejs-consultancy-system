@@ -26,9 +26,10 @@ export default class NewConsultorioView {
     do {
       console.log("\nMenu Principal");
       console.log("1 - Cadastrar um paciente");
-      console.log("2 - Listar Pacientes");
-      console.log("3 - Agenda");
-      console.log("4 - Sair");
+      console.log("2 - Remover um paciente");
+      console.log("3 - Listar Pacientes");
+      console.log("4 - Agenda");
+      console.log("5 - Sair");
 
       option = parseInt(this.getInput("Escolha uma opção: "));
 
@@ -37,19 +38,22 @@ export default class NewConsultorioView {
           await this.cadastrarPaciente();
           break;
         case 2:
-          await this.listarPacientes();
+          await this.removerPaciente();
           break;
         case 3:
-          await this.menuAgenda();
+          await this.listarPacientes();
           break;
         case 4:
+          await this.menuAgenda();
+          break;
+        case 5:
           console.log("Encerrando o programa...");
           break;
         default:
           console.log("Opção inválida, tente novamente.");
           break;
       }
-    } while (option !== 4);
+    } while (option !== 5);
   }
 
   async menuAgenda() {
@@ -195,6 +199,40 @@ export default class NewConsultorioView {
           (error instanceof Error ? error.message : error),
       );
       return null;
+    }
+  }
+
+  async removerPaciente() {
+    try {
+      let naoValido: boolean = true;
+      let cpfRemoverPaciente: string;
+
+      while (naoValido) {
+        cpfRemoverPaciente = this.getInput( "Insira o CPF do paciente que deseja remover: ");
+        const cpf = this.formatarCpf(cpfRemoverPaciente);
+        const isPacienteCadastrado = await this.getController().buscaPacientePorCPF(cpf);
+        if (!isPacienteCadastrado) {
+          console.log("CPF não encontrado no sistema");
+          continue;
+        }
+
+        const temConsultasValidas = await this.getController().buscarConsultasValidasPorCPF(cpf); // Método para pegar agendamentos relacionados
+        console.log(temConsultasValidas);
+        if (temConsultasValidas == true) {
+          console.log("Paciente possui consultas ainda válidas");
+          continue;
+        }
+
+        await this.getController().removerPacientePorCPF(cpf);
+        console.log("Paciente removido com sucesso");
+
+        naoValido = false;
+      }
+    } catch (error) {
+      console.log(
+        "Erro ao remover um paciente: " +
+          (error instanceof Error ? error.message : error),
+      );
     }
   }
 

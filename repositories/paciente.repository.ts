@@ -28,6 +28,14 @@ class PacienteRepository {
     })
   }
 
+  async removePorCPF(cpf: string): Promise<void> {
+    if (cpf !== null) await Paciente.destroy({
+      where: {
+        cpf: cpf
+      }
+    })
+  }
+
   /**
    * Recupera um paciente pelo CPF
    *

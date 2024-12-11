@@ -21,6 +21,23 @@ class ConsultaRepository {
     if (consulta !== null) await consulta.destroy();
   }
 
+  async buscaConsultasValidasPorCPF(cpf: string): Promise<Consulta[]> {
+    const paciente = await Paciente.findOne({where: { cpf }});
+    if (!paciente) {
+      return [];
+    }
+
+    const consultasValidas = await Consulta.findAll({
+      where: {
+        idPaciente: paciente.dataValues.id,
+        dataConsulta: {
+          [Op.gt]: new Date(),
+        },
+      },
+    });
+
+    return consultasValidas;
+  }
 
   /**
     * Remove uma consulta com base em dataConsulta, horaInicial e horaFinal
