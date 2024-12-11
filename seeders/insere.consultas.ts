@@ -45,7 +45,7 @@ export const seedConsultas = async (): Promise<void> => {
     for (let i = 0; i < 10; i++) {
       const consulta = Consulta.build({
         idPaciente: faker.helpers.arrayElement(pacientes).dataValues.id,
-        dataConsulta: faker.date.future(),
+        dataConsulta: faker.date.past(),
         horaInicial: faker.helpers.arrayElement([
           "08:00",
           "10:00",
@@ -72,4 +72,3 @@ export const seedConsultas = async (): Promise<void> => {
     console.error("Erro ao inserir consultas e pacientes:", error);
   }
 };
-

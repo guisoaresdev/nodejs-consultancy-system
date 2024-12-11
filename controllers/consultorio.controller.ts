@@ -48,6 +48,15 @@ export default class ConsultorioController {
     }
   }
 
+  async limparConsultasInvalidas(): Promise<boolean> {
+    try {
+      const consultas = await ConsultorioService.limparConsultasInvalidas();
+      return consultas;
+    } catch (error) {
+      throw new Error("Erro ao listar consultas: " + error.message);
+    }
+  }
+
   async buscarConsultasValidasPorCPF(cpf: string): Promise<boolean> {
     try {
       const validas = await ConsultorioService.buscaConsultasValidasPorCPF(cpf);

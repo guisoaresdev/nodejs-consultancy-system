@@ -88,26 +88,36 @@ export default class NewConsultorioView {
     } while (option !== 4);
   }
 
-  async listarConsultas() {
-    try {
-      const consultas = await this.getController().listarConsultas();
+async listarConsultas() {
+  try {
+    console.log("\nLimpando do banco as consultas inválidas...\n");
+    await this.getController().limparConsultasInvalidas();
 
-      if (consultas.length === 0) {
-        console.log("Nenhuma consulta encontrada.");
-      } else {
-        consultas.forEach((consulta) => {
-          const data: Date = new Date(consulta.dataConsulta);
-          const dataFormatada = `${String(data.getDate() + 1).padStart(2, "0")}/${String(data.getMonth() + 1).padStart(2, "0")}/${data.getFullYear()}`;
-          const paciente = consulta.paciente;
-          console.log(
-            `Paciente: ${paciente.nome} | CPF: ${paciente.cpf} | Data da consulta: ${dataFormatada} | Hora Inicial: ${consulta.horaInicial} | Hora Final: ${consulta.horaFinal}`,
-          );
-        });
-      }
-    } catch (error) {
-      console.log("Erro ao listar as consultas: " + error.message);
+    const consultas = await this.getController().listarConsultas();
+
+    if (consultas.length === 0) {
+      console.log("Nenhuma consulta encontrada.\n");
+    } else {
+      console.log("=".repeat(50));
+      console.log("AGENDA DE CONSULTAS");
+      console.log("=".repeat(50));
+
+      consultas.forEach((consulta, index) => {
+        const data = new Date(consulta.dataConsulta);
+        const dataFormatada = `${String(data.getDate()).padStart(2, "0")}/${String(data.getMonth() + 1).padStart(2, "0")}/${data.getFullYear()}`;
+        const paciente = consulta.paciente;
+
+        console.log(`${index + 1}. Paciente: ${paciente.nome}`);
+        console.log(`   CPF: ${paciente.cpf}`);
+        console.log(`   Data: ${dataFormatada}`);
+        console.log(`   Hora: das ${consulta.horaInicial} às ${consulta.horaFinal}`);
+        console.log("-".repeat(50));
+      });
     }
+  } catch (error) {
+    console.log("Erro ao listar consultas: " + error.message);
   }
+}
 
   async cadastrarPaciente() {
     let cpfValido: boolean = false;
@@ -244,7 +254,7 @@ export default class NewConsultorioView {
     try {
       let paciente: any;
       let idPaciente: string | null = "0";
-      // Buscar todos os pacientes no banco de dados
+
       const pacientes = await this.getController().listarPacientes();
 
       if (pacientes.length !== 0) {
@@ -465,35 +475,42 @@ export default class NewConsultorioView {
     }
   }
 
-  async listarPacientes() {
-    try {
-      const pacientes = await this.getController().listarPacientes();
+async listarPacientes() {
+  try {
+    console.log("\nLimpando do banco as consultas inválidas...\n");
+    await this.getController().limparConsultasInvalidas();
 
-      if (pacientes.length === 0) {
-        console.log("Nenhum paciente encontrado.");
-      } else {
-        pacientes.forEach((paciente, index) => {
-          console.log(
-            `${index}. Nome: ${paciente.nome} CPF: ${paciente.cpf} Idade: ${paciente.idade}`,
-          );
+    const pacientes = await this.getController().listarPacientes();
 
-          if (paciente.consultas && paciente.consultas.length > 0) {
-            paciente.consultas.forEach((consulta) => {
-              const data: Date = new Date(consulta.dataConsulta);
-              const dataFormatada = `${String(data.getDate() + 1).padStart(2, "0")}/${String(data.getMonth() + 1).padStart(2, "0")}/${data.getFullYear()}`;
-              console.log(
-                `  - Consulta para ${dataFormatada} as ${consulta.horaInicial} até ${consulta.horaFinal}`,
-              );
-            });
-          } else {
-            console.log("  Nenhuma consulta encontrada para este paciente.");
-          }
-        });
-      }
-    } catch (error) {
-      console.log("Erro ao listar pacientes: " + error.message);
+    if (pacientes.length === 0) {
+      console.log("Nenhum paciente encontrado.\n");
+    } else {
+      console.log("=".repeat(50));
+      console.log("LISTA DE PACIENTES");
+      console.log("=".repeat(50));
+
+      pacientes.forEach((paciente, index) => {
+        console.log(`${index}. Nome: ${paciente.nome}`);
+        console.log(`   CPF: ${paciente.cpf} | Idade: ${paciente.idade}`);
+        
+        if (paciente.consultas && paciente.consultas.length > 0) {
+          console.log("   Consultas:");
+          paciente.consultas.forEach((consulta) => {
+            const data = new Date(consulta.dataConsulta);
+            const dataFormatada = `${String(data.getDate()).padStart(2, "0")}/${String(data.getMonth() + 1).padStart(2, "0")}/${data.getFullYear()}`;
+            console.log(`     - ${dataFormatada} das ${consulta.horaInicial} às ${consulta.horaFinal}`);
+          });
+        } else {
+          console.log("   Nenhuma consulta encontrada.");
+        }
+
+        console.log("-".repeat(50));
+      });
     }
+  } catch (error) {
+    console.log("Erro ao listar pacientes: " + error.message);
   }
+}
 
   formatarCpf(cpf) {
     if (!cpf) {

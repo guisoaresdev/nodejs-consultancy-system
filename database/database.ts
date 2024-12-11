@@ -49,8 +49,6 @@ class Db {
         as: "paciente",
       });
 
-      await seedConsultas();
-
       await this.sequelize.sync({ force: false });
       console.log("Modelos sincronizados com o banco de dados.");
 

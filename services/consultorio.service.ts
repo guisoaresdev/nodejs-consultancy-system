@@ -41,6 +41,18 @@ class ConsultorioService {
     }
   }
 
+  async limparConsultasInvalidas(): Promise<boolean> {
+    try {
+      const consultasRemovidas = await ConsultaRepository.removeConsultasInvalidas();
+      if (consultasRemovidas > 0) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      throw new Error("Erro ao cancelar consulta: " + error.message);
+    }
+  }
+
   async buscaConsultasValidasPorCPF(cpf: string): Promise<boolean> {
     try {
       const consultasValidas = await ConsultaRepository.buscaConsultasValidasPorCPF(cpf);
