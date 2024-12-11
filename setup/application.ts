@@ -1,22 +1,40 @@
-import Agenda from "../classes/agenda.ts";
-import Paciente from "../classes/paciente.ts";
-import Consultorio from "../classes/consultorio.ts";
-import ConsultorioView from "../views/consultorio.view.ts";
+import db from "../database/database";
+import ConsultorioController from "../controllers/consultorio.controller";
+import ConsultorioView from "../views/consultorio.view";
 import PromptSync from "prompt-sync";
 
-export default class Application {
-  private consultorio: Consultorio;
+class Application {
+  private prompt: any;
+  private consultorioController: ConsultorioController;
   private consultorioView: ConsultorioView;
 
   constructor() {
-    const agenda: Agenda = new Agenda();
-    const pacientes: Paciente[] = [];
-    const prompt = PromptSync();
-    this.consultorio = new Consultorio(agenda, pacientes);
-    this.consultorioView = new ConsultorioView(prompt, this.consultorio);
+    this.prompt = PromptSync();
+    this.consultorioController = new ConsultorioController();
+    this.consultorioView = new ConsultorioView(
+      this.prompt,
+      this.consultorioController,
+    );
   }
 
-  getConsultorioView() {
-    return this.consultorioView;
+  async init() {
+    console.log("Inicializando o sistema...");
+
+    const dbInitialized = await db.init();
+    if (!dbInitialized) {
+      console.error(
+        "Erro ao inicializar o banco de dados. Encerrando a aplicação.",
+      );
+      process.exit(1);
+    }
+
+    try {
+      await this.consultorioView.menuPrincipal();
+    } catch (error) {
+      console.error("Erro inesperado durante a execução:", error);
+      process.exit(1);
+    }
   }
 }
+
+export default Application;
