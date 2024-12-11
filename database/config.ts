@@ -1,12 +1,15 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 /**
  * Classe que define os parâmetros de acesso ao SGBD
  */
 const dbConfig = {
-  database: "consultorio",
-  username: "postgres",
-  password: "12345",
-  host: "localhost",
-  dialect: "postgres",
+  database: process.env.database,
+  username: process.env.username,
+  password: process.env.password,
+  host: process.env.host,
+  dialect: process.env.dialect,
 };
 
 export default dbConfig;

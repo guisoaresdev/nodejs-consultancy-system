@@ -32,7 +32,7 @@ class ConsultorioService {
   async cancelarConsulta(cpf: string, dataConsulta: Date, horaInicial: string): Promise<boolean> {
     try {
       const consultasRemovidas = await ConsultaRepository.removePorDataEHorario(cpf, dataConsulta, horaInicial);
-      if (consultasRemovidas) {
+      if (consultasRemovidas > 0) {
         return true;
       }
       return false;

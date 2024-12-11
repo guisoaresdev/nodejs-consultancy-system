@@ -3,7 +3,6 @@ import Paciente from "../domain/paciente";
 
 export default class ConsultorioController {
 
-  // Função para cadastrar um paciente
   async cadastrarPaciente(cpf: string, nome: string, dataNasc: Date): Promise<string> {
     try {
       const idPaciente = await ConsultorioService.cadastrarPaciente(cpf, nome, dataNasc);
@@ -13,7 +12,7 @@ export default class ConsultorioController {
     }
   }
 
-  async listarPacientes(): Promise<any[]> {
+  async listarPacientes(): Promise<Paciente[]> {
     try {
       const pacientes = await ConsultorioService.buscarPacientes();
       return pacientes;
@@ -31,7 +30,7 @@ export default class ConsultorioController {
     }
   }
 
-  async agendarConsulta(pacienteId: string, dataConsulta: Date, horaInicial: string, horaFinal: string): Promise<string> {
+  async agendarConsulta(pacienteId: string, dataConsulta: Date, horaInicial: string, horaFinal: string): Promise<boolean> {
     try {
       const resultado = await ConsultorioService.agendarConsulta(pacienteId, dataConsulta, horaInicial, horaFinal);
       return resultado;
@@ -40,7 +39,7 @@ export default class ConsultorioController {
     }
   }
 
-  async cancelarConsulta(cpf: string, dataConsulta: Date, horaInicial: string): Promise<string> {
+  async cancelarConsulta(cpf: string, dataConsulta: Date, horaInicial: string): Promise<boolean> {
     try {
       const resultado = await ConsultorioService.cancelarConsulta(cpf, dataConsulta, horaInicial);
       return resultado;

@@ -1,7 +1,7 @@
 import PromptSync from "prompt-sync";
 import ConsultorioController from "../controllers/consultorio.controller";
 
-export default class ConsultorioView {
+export default class NewConsultorioView {
   private prompt: PromptSync.Prompt;
   private consultorioController: ConsultorioController;
 
@@ -35,63 +35,217 @@ export default class ConsultorioView {
 
       switch (option) {
         case 1:
-          this.cadastrarPaciente();
+          await this.cadastrarPaciente();
           break;
         case 2:
-          this.listarPacientes();
-          this.removerPaciente();
+          await this.removerPaciente();
           break;
         case 3:
-          this.listarPacientes();
+          await this.listarPacientes();
           break;
         case 4:
-          this.menuAgenda();
+          await this.menuAgenda();
           break;
         case 5:
           console.log("Encerrando o programa...");
           break;
         default:
           console.log("Opção inválida, tente novamente.");
+          break;
       }
     } while (option !== 5);
   }
 
-  async listarPacientes() {
-    try {
-      const pacientes = await this.consultorioController.listarPacientes();
-      console.log("Pacientes encontrados: ", JSON.stringify(pacientes, null, 2));
+  async menuAgenda() {
+    let option;
+    do {
+      console.log("\nAgenda");
+      console.log("1 - Agendar consulta");
+      console.log("2 - Cancelar uma consulta");
+      console.log("3 - Listar agenda");
+      console.log("4 - Voltar para o menu principal");
 
-      if (pacientes.length === 0) {
-        console.log("Nenhum paciente encontrado.");
+      option = parseInt(this.getInput("Escolha uma opção: "));
+
+      switch (option) {
+        case 1:
+          await this.agendarConsulta();
+          break;
+        case 2:
+          await this.cancelarConsulta();
+          break;
+        case 3:
+          console.log("Listando Consultas...");
+          await this.listarConsultas();
+          break;
+        case 4:
+          console.log("Voltando ao menu principal...");
+          break;
+        default:
+          console.log("Opção inválida, tente novamente.");
+          break;
+      }
+    } while (option !== 4);
+  }
+
+  async listarConsultas() {
+    try {
+      const consultas = await this.getController().listarConsultas();
+
+      if (consultas.length === 0) {
+        console.log("Nenhuma consulta encontrada.");
       } else {
-        pacientes.forEach((paciente) => {
-          console.log(paciente);
-          console.log(`${paciente.nome} - ${paciente.cpf}`);
-          paciente.agendamentos.forEach((agendamento) => {
-            console.log(
-              `  Consulta em: ${agendamento.data_consulta} - ${agendamento.hora_inicial} até ${agendamento.hora_final}`,
-            );
-          });
+        consultas.forEach((consulta) => {
+          const data: Date = new Date(consulta.dataConsulta);
+          const dataFormatada = `${String(data.getDate() + 1).padStart(2, "0")}/${String(data.getMonth() + 1).padStart(2, "0")}/${data.getFullYear()}`;
+          const paciente = consulta.paciente;
+          console.log(
+            `Paciente: ${paciente.nome} | CPF: ${paciente.cpf} | Data da consulta: ${dataFormatada} | Hora Inicial: ${consulta.horaInicial} | Hora Final: ${consulta.horaFinal}`,
+          );
         });
       }
     } catch (error) {
-      console.log("Erro ao listar pacientes: " + error.message);
+      console.log("Erro ao listar as consultas: " + error.message);
+    }
+  }
+
+  async cadastrarPaciente() {
+    let cpfValido: boolean = false;
+    let nomeValido: boolean = false;
+    let dataValida: boolean = false;
+    let IdadeValida: boolean = false;
+
+    let cpf = this.getInput("Informe um CPF válido: ");
+    while (!cpfValido) {
+      cpf = this.formatarCpf(cpf);
+
+      if (!this.isCpfValido(cpf)) {
+        console.log("CPF não é válido");
+        cpf = this.getInput("Informe um CPF válido: ");
+        continue;
+      }
+
+      const pacienteExistente =
+        await this.getController().buscaPacientePorCPF(cpf);
+      if (pacienteExistente) {
+        console.log("CPF já cadastrado");
+        cpf = this.getInput("Informe um CPF válido: ");
+        continue;
+      }
+
+      cpfValido = true;
+    }
+
+    let nome = this.getInput("Informe o nome: ");
+    while (!nomeValido) {
+      if (!this.nomeTemTamanhoMinimo(nome, 5)) {
+        console.log(`Nome deve ter no mínimo 5 caracteres `);
+        nome = this.getInput("Informe o nome: ");
+        continue;
+      }
+
+      nomeValido = true;
+    }
+
+    const dataAtual = new Date();
+    var dataNasc = new Date();
+
+    var dataNascStr = this.getInput(
+      "Informe a data de nascimento (DD/MM/YYYY): ",
+    );
+    while (!dataValida) {
+      if (!this.validaFormatoData(dataNascStr)) {
+        console.log("Data deve ser no formato DD/MM/YYYY");
+        dataNascStr = this.getInput(
+          "Informe a data de nascimento (DD/MM/YYYY): ",
+        );
+        continue;
+      }
+
+      dataNasc = this.formataData(dataNascStr);
+      if (!this.validaData(dataNasc)) {
+        console.log("Data de Nascimento inválida");
+        dataNascStr = this.getInput(
+          "Informe a data de nascimento (DD/MM/YYYY): ",
+        );
+        continue;
+      }
+
+      if (!this.validaIdadeMinima(dataNasc)) {
+        console.log("Paciente deve ter no mínimo 13 anos de idade");
+        dataNascStr = this.getInput(
+          "Informe a data de nascimento (DD/MM/YYYY): ",
+        );
+        continue;
+      }
+
+      if (dataNasc > dataAtual) {
+        console.log("Data de Nascimento não pode ser após a data presente.");
+        dataNascStr = this.getInput(
+          "Informe a data de nascimento (DD/MM/YYYY): ",
+        );
+        continue;
+      }
+
+      dataValida = true;
+    }
+    try {
+      const idPaciente = await this.getController().cadastrarPaciente(
+        cpf,
+        nome,
+        dataNasc,
+      );
+      console.log("Paciente criado com sucesso!");
+      return idPaciente;
+    } catch (error) {
+      console.log(
+        "Erro ao cadastrar paciente: " +
+          (error instanceof Error ? error.message : error),
+      );
+      return null;
+    }
+  }
+
+  async removerPaciente() {
+    try {
+      let naoValido: boolean = true;
+      let cpfRemoverPaciente: string;
+
+      while (naoValido) {
+        cpfRemoverPaciente = this.getInput( "Insira o CPF do paciente que deseja remover: ");
+        const cpf = this.formatarCpf(cpfRemoverPaciente);
+        const isPacienteCadastrado = await this.getController().buscaPacientePorCPF(cpf);
+        if (!isPacienteCadastrado) {
+          console.log("CPF não encontrado no sistema");
+          continue;
+        }
+
+        const temConsultasValidas = await this.getController().buscarConsultasValidasPorCPF(cpf); // Método para pegar agendamentos relacionados
+        console.log(temConsultasValidas);
+        if (temConsultasValidas == true) {
+          console.log("Paciente possui consultas ainda válidas");
+          continue;
+        }
+
+        await this.getController().removerPacientePorCPF(cpf);
+        console.log("Paciente removido com sucesso");
+
+        naoValido = false;
+      }
+    } catch (error) {
+      console.log(
+        "Erro ao remover um paciente: " +
+          (error instanceof Error ? error.message : error),
+      );
     }
   }
 
   async agendarConsulta(): Promise<void> {
     try {
-      let paciente: PacienteModel | null = null;
-
+      let paciente: any;
+      let idPaciente: string | null = "0";
       // Buscar todos os pacientes no banco de dados
-      const pacientes = await PacienteModel.findAll({
-        include: [
-          {
-            model: AgendamentoModel, // Relacionamento de agendamentos com o paciente
-            required: false, // Pode trazer pacientes sem agendamentos
-          },
-        ],
-      });
+      const pacientes = await this.getController().listarPacientes();
 
       if (pacientes.length !== 0) {
         const pacienteExistente = this.getInput(
@@ -99,31 +253,35 @@ export default class ConsultorioView {
         );
 
         if (pacienteExistente === "Y") {
-          // Listar pacientes e permitir escolher um por índice
-          pacientes.forEach((paciente, index) => {
-            console.log(`${index} - ${paciente.nome} - ${paciente.cpf}`);
-          });
-
+          await this.listarPacientes();
           const indexPaciente = parseInt(
             this.getInput(
-              "Insira o index do paciente que deseja marcar a consulta: ",
+              "Insira o ID do paciente que deseja marcar a consulta: ",
             ),
           );
 
           if (indexPaciente >= 0 && indexPaciente < pacientes.length) {
             paciente = pacientes[indexPaciente];
+            idPaciente = paciente.dataValues.id;
           } else {
             console.log("Index do paciente inválido");
             return; // Retorna caso o índice seja inválido
           }
         } else {
-          paciente = await this.cadastrarPaciente(); // Método para cadastrar um novo paciente
+          idPaciente = await this.cadastrarPaciente();
+          paciente = await this.getController().buscaPacientePorId(idPaciente);
         }
       } else {
         console.log(
           "Nenhum paciente registrado no sistema, criando novo paciente.",
         );
-        paciente = await this.cadastrarPaciente(); // Método para cadastrar um novo paciente
+        idPaciente = await this.cadastrarPaciente();
+        paciente = await this.getController().buscaPacientePorId(idPaciente);
+      }
+
+      if (idPaciente == null) {
+        console.log("idPaciente nulo");
+        return;
       }
 
       if (paciente) {
@@ -212,13 +370,12 @@ export default class ConsultorioView {
         }
 
         // Criação do agendamento no banco
-        await AgendamentoModel.create({
-          paciente_id: paciente.id,
-          data_consulta: dataConsulta,
-          hora_inicial: horaInicial,
-          hora_final: horaFinal,
-        });
-
+        await this.getController().agendarConsulta(
+          idPaciente,
+          dataConsulta,
+          horaInicial,
+          horaFinal,
+        );
         console.log("Consulta agendada com sucesso!");
       } else {
         console.log("Paciente está null, impossível finalizar o agendamento.");
@@ -232,11 +389,17 @@ export default class ConsultorioView {
     let cpfValido: boolean = false;
     let validaDataConsulta: boolean = false;
     let validaHorarioInicial: boolean = false;
-    var cpf = this.getInput("Informe um CPF válido: ");
+    var cpf = this.getInput("Informe o CPF do paciente: ");
     while (!cpfValido) {
       cpf = this.formatarCpf(cpf);
+      
+      if (!this.isCpfValido(cpf)) {
+        console.log("CPF inválido!");
+        cpf = this.getInput("Informe um CPF válido: ");
+        continue;
+      }
 
-      if (!this.isCpfDuplicado(this.getConsultorio().getPacientes(), cpf)) {
+      if (!this.getController().buscaPacientePorCPF(cpf)) {
         console.log("CPF não encontrado");
         cpf = this.getInput("Informe um CPF válido: ");
         continue;
@@ -247,32 +410,24 @@ export default class ConsultorioView {
 
     var dataConsultaIn: Date;
 
-    var dataConsultaInput = this.getInput(
-      "Digite a data da consulta (dd/mm/yyyy): ",
-    );
+    var dataConsultaInput = this.getInput( "Digite a data da consulta (dd/mm/yyyy): ");
     while (!validaDataConsulta) {
       if (!this.validaFormatoData(dataConsultaInput)) {
         console.log("Data deve ser no formato DD/MM/YYYY");
-        dataConsultaInput = this.getInput(
-          "Digite a data da consulta (dd/mm/yyyy): ",
-        );
+        dataConsultaInput = this.getInput( "Digite a data da consulta (dd/mm/yyyy): ");
         continue;
       }
 
       dataConsultaIn = this.formataData(dataConsultaInput);
       if (!this.validaData(dataConsultaIn)) {
         console.log("Data da consulta inválida");
-        dataConsultaInput = this.getInput(
-          "Digite a data da consulta (dd/mm/yyyy): ",
-        );
+        dataConsultaInput = this.getInput( "Digite a data da consulta (dd/mm/yyyy): ");
         continue;
       }
 
-      if (this.dataConsultaIn < new Date()) {
+      if (dataConsultaIn < new Date()) { 
         console.log("Data Inválida: Consulta com dia anterior a data de hoje");
-        dataConsultaInput = this.getInput(
-          "Digite a data da consulta (dd/mm/yyyy): ",
-        );
+        dataConsultaInput = this.getInput( "Digite a data da consulta (dd/mm/yyyy): ");
         continue;
       }
 
@@ -290,9 +445,7 @@ export default class ConsultorioView {
       }
 
       if (!this.validarDisponibilidadeHorario(horaInicial)) {
-        console.log(
-          "Os horários disponíveis são de 15 em 15 minutos. Ex: 20:00, 20:15, 20:30",
-        );
+        console.log("Os horários disponíveis são de 15 em 15 minutos. Ex: 20:00, 20:15, 20:30");
         horaInicial = this.getInput("Informe a hora inicial (HH:mm): ");
         continue;
       }
@@ -303,181 +456,56 @@ export default class ConsultorioView {
     const [dia, mes, ano] = dataConsultaInput.split("/").map(Number);
     const dataConsulta = new Date(ano, mes - 1, dia);
 
-    const sucesso = this.getConsultorio().cancelaConsulta(
-      cpf,
-      dataConsulta,
-      horaInicial,
-      this.getConsultorio().getAgenda(),
-    );
+    const sucesso = await this.getController().cancelarConsulta(cpf, dataConsulta, horaInicial);
 
     if (!sucesso) {
       console.log("Falha no cancelamento do agendamento.");
+    } else {
+      console.log("Consulta removida com sucesso!");
     }
   }
 
-  async cadastrarPaciente() {
+  async listarPacientes() {
     try {
-      let cpfValido: boolean = false;
-      let nomeValido: boolean = false;
-      let dataValida: boolean = false;
-      let IdadeValida: boolean = false;
+      const pacientes = await this.getController().listarPacientes();
 
-      let cpf = this.getInput("Informe um CPF válido: ");
-      while (!cpfValido) {
-        cpf = this.formatarCpf(cpf);
-
-        if (!this.isCpfValido(cpf)) {
-          console.log("CPF não é válido");
-          cpf = this.getInput("Informe um CPF válido: ");
-          return;
-        }
-
-        const pacienteExistente = await this.consultorioController.buscaPacientePorCPF(cpf);
-        if (pacienteExistente) {
-          console.log("CPF já cadastrado");
-          cpf = this.getInput("Informe um CPF válido: ");
-          continue;
-        }
-
-        cpfValido = true;
-      }
-
-      let nome = this.getInput("Informe o nome: ");
-      while (!nomeValido) {
-        if (!this.nomeTemTamanhoMinimo(nome, 5)) {
-          console.log(
-            `Nome deve ter no mínimo 5 caracteres `,
-          );
-          nome = this.getInput("Informe o nome: ");
-          continue;
-        }
-
-        nomeValido = true;
-      }
-
-      const dataAtual = new Date();
-      var dataNasc = new Date();
-
-      var dataNascStr = this.getInput(
-        "Informe a data de nascimento (DD/MM/YYYY): ",
-      );
-      while (!dataValida) {
-        if (!this.validaFormatoData(dataNascStr)) {
-          console.log("Data deve ser no formato DD/MM/YYYY");
-          dataNascStr = this.getInput(
-            "Informe a data de nascimento (DD/MM/YYYY): ",
-          );
-          continue;
-        }
-
-        dataNasc = this.formataData(dataNascStr);
-        if (!this.validaData(dataNasc)) {
-          console.log("Data de Nascimento inválida");
-          dataNascStr = this.getInput(
-            "Informe a data de nascimento (DD/MM/YYYY): ",
-          );
-          continue;
-        }
-
-        if (!this.validaIdadeMinima(dataNasc)) {
-          console.log("Paciente deve ter no mínimo 13 anos de idade");
-          dataNascStr = this.getInput(
-            "Informe a data de nascimento (DD/MM/YYYY): ",
-          );
-          continue;
-        }
-
-        if (dataNasc > dataAtual) {
-          console.log("Data de Nascimento não pode ser após a data presente.");
-          dataNascStr = this.getInput(
-            "Informe a data de nascimento (DD/MM/YYYY): ",
-          );
-          continue;
-        }
-
-        dataValida = true;
-      }
-
-      const paciente = await this.consultorioController.cadastrarPaciente(cpf, nome, dataNasc);
-      if (paciente) {
-        console.log("Paciente criado com sucesso!");
-        return paciente;
+      if (pacientes.length === 0) {
+        console.log("Nenhum paciente encontrado.");
       } else {
-        return null;
+        pacientes.forEach((paciente, index) => {
+          console.log(
+            `${index}. Nome: ${paciente.nome} CPF: ${paciente.cpf} Idade: ${paciente.idade}`,
+          );
+
+          if (paciente.consultas && paciente.consultas.length > 0) {
+            paciente.consultas.forEach((consulta) => {
+              const data: Date = new Date(consulta.dataConsulta);
+              const dataFormatada = `${String(data.getDate() + 1).padStart(2, "0")}/${String(data.getMonth() + 1).padStart(2, "0")}/${data.getFullYear()}`;
+              console.log(
+                `  - Consulta para ${dataFormatada} as ${consulta.horaInicial} até ${consulta.horaFinal}`,
+              );
+            });
+          } else {
+            console.log("  Nenhuma consulta encontrada para este paciente.");
+          }
+        });
       }
     } catch (error) {
-      console.log(
-        "Erro ao cadastrar paciente: " +
-          (error instanceof Error ? error.message : error),
-      );
-      return null;
+      console.log("Erro ao listar pacientes: " + error.message);
     }
   }
 
-  async removerPaciente() {
-    try {
-      let possuiAgendamento: boolean = true;
-      let cpfRemoverPaciente: string;
-
-      while (possuiAgendamento) {
-        cpfRemoverPaciente = this.getInput(
-          "Insira o CPF do paciente que deseja remover: ",
-        );
-        const cpf = this.formatarCpf(cpfRemoverPaciente);
-        const paciente = await PacienteModel.findOne({ where: { cpf } });
-        if (!paciente) {
-          console.log("CPF não encontrado no sistema");
-          continue;
-        }
-
-        const agendamentos = await paciente.getAgendamentos(); // Método para pegar agendamentos relacionados
-        if (agendamentos.length > 0) {
-          console.log("Paciente possui agendamentos ainda válidos");
-          continue;
-        }
-
-        await paciente.destroy();
-        console.log("Paciente removido com sucesso");
-
-        possuiAgendamento = false; // Sai do loop
-      }
-    } catch (error) {
-      console.log(
-        "Erro ao remover um paciente: " +
-          (error instanceof Error ? error.message : error),
-      );
+  formatarCpf(cpf) {
+    if (!cpf) {
+      console.log("CPF inválido");
+      return "";
     }
+    cpf = cpf.replace(/[^\d]+/g, "");
+    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
   }
 
-  menuAgenda() {
-    let option;
-    do {
-      console.log("\nAgenda");
-      console.log("1 - Agendar consulta");
-      console.log("2 - Cancelar consulta");
-      console.log("3 - Listar agenda");
-      console.log("4 - Voltar para o menu principal");
-
-      option = parseInt(this.getInput("Escolha uma opção: "));
-
-      switch (option) {
-        case 1:
-          this.agendarConsulta();
-          break;
-        case 2:
-          this.cancelarConsulta();
-          break;
-        case 3:
-          console.log("Listando agenda...");
-          this.getConsultorio().getAgenda().printAgendaFormatada();
-          break;
-        case 4:
-          console.log("Voltando ao menu principal...");
-          break;
-        default:
-          console.log("Opção inválida, tente novamente.");
-      }
-    } while (option !== 4);
+  nomeTemTamanhoMinimo(nome, tamanho_minimo_nome): boolean {
+    return nome.length > tamanho_minimo_nome;
   }
 
   isCpfValido(cpf): boolean {
@@ -501,15 +529,6 @@ export default class ConsultorioView {
     remainder = (sum * 10) % 11;
     if (remainder === 10 || remainder === 11) remainder = 0;
     return remainder === parseInt(newCpf.substring(10, 11));
-  }
-
-  formatarCpf(cpf) {
-    cpf = cpf.replace(/[^\d]+/g, "");
-    return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-  }
-
-  nomeTemTamanhoMinimo(nome, tamanho_minimo_nome): boolean {
-    return nome.length > tamanho_minimo_nome;
   }
 
   validaFormatoData(data: string): boolean {
@@ -550,7 +569,6 @@ export default class ConsultorioView {
     const [, horas, minutos] = horario.match(/^(\d{2}):(\d{2})$/) || [];
     const minutosInt = parseInt(minutos, 10);
 
-    // Verifica se os minutos são múltiplos de 15
     return minutosInt % 15 === 0;
   }
 
@@ -565,27 +583,5 @@ export default class ConsultorioView {
     const totalMinutosFinal = horasFinal * 60 + minutosFinal;
 
     return totalMinutosFinal > totalMinutosInicial;
-  }
-
-  isCpfDuplicado(pacientes, cpf): boolean {
-    let isDuplicated: boolean = false;
-    for (let i = 0; i < pacientes.length; i++) {
-      if (pacientes[i].getCpf() == cpf) {
-        isDuplicated = true;
-      }
-    }
-    return isDuplicated;
-  }
-
-  temAgendamentoFuturo(cpf: string, agenda: Agenda): boolean {
-    for (const agendamento of agenda.getListaAgendamento()) {
-      if (
-        agendamento.paciente.getCpf() === cpf &&
-        agendamento.data_consulta > new Date()
-      ) {
-        return true;
-      }
-    }
-    return false;
   }
 }
